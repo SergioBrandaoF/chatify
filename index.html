@@ -106,8 +106,9 @@
         <div id="profile-nickname"></div>
         <button id="direct-message">DM</button>
     </div>
-    <form id="form" action="">
-        <input id="input" autocomplete="off"><button>Send</button>
+    <form id="form" action="" enctype="multipart/form-data">
+        <input id="input" autocomplete="off"><input type="file" id="file-input">
+        <button>Send</button>
     </form>
     <form id="private-form" action="">
         <input id="recipient" autocomplete="off" placeholder="Recipient">
@@ -119,6 +120,7 @@
 
         var form = document.getElementById('form');
         var input = document.getElementById('input');
+        var fileInput = document.getElementById('file-input');
         var privateForm = document.getElementById('private-form');
         var recipient = document.getElementById('recipient');
         var privateInput = document.getElementById('private-input');
@@ -134,10 +136,45 @@
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            const file = fileInput.files[0];
+
             if (input.value) {
                 socket.emit('chat message', input.value);
                 input.value = '';
                 socket.emit('stop typing');
+            }
+
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsArrayBuffer(file);
+                reader.onload = function(event) {
+                    const fileData = event.target.result;
+                    const fileInfo = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: Array.from(new Uint8Array(fileData))
+                    };
+                    socket.emit('file', fileInfo);
+                    fileInput.value = '';
+                }
+            }
+        });
+
+        socket.on('file', function(fileInfo) {
+            console.log('Received file:', fileInfo);
+
+            if (fileInfo.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
+                messages.appendChild(img);
+            } else {
+                const link = document.createElement('a');
+                link.href = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
+                link.textContent = fileInfo.name;
+                link.download = fileInfo.name;
+                messages.appendChild(link);
             }
         });
 
