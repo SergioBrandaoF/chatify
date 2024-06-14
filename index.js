@@ -31,6 +31,10 @@ io.on('connection', (socket) => {
         console.log(`${nickname}: ${msg}`);
     });
 
+    socket.on('file', function(fileInfo) {
+        io.emit('file', fileInfo);
+    })
+
     socket.on('private message', ({recipientNickname, msg}) => {
         for (let [id, userNickname] of Object.entries(onlineUsers)) {
             if (userNickname === recipientNickname) {
