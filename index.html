@@ -22,19 +22,42 @@
             box-sizing: border-box; 
             backdrop-filter: blur(10px); 
         }
-        #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-        #input:focus { outline: none; }
-        #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+        #input { 
+            border: none; 
+            padding: 0 1rem; 
+            flex-grow: 1; 
+            border-radius: 2rem; 
+            margin: 0.25rem; 
+        }
+        #input:focus { 
+            outline: none; 
+        }
+        #form > button { 
+            background: #333; 
+            border: none; 
+            padding: 0 1rem; 
+            margin: 0.25rem; 
+            border-radius: 3px; 
+            outline: none; 
+            color: #fff; }
 
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages > li { padding: 0.5rem 1rem; }
-        #messages > li:nth-child(odd) { background: #efefef; }
+        #messages { 
+            list-style-type: none; 
+            margin: 0; 
+            padding: 0; 
+        }
+        #messages > li { 
+            padding: 0.5rem 1rem; 
+        }
+        #messages > li:nth-child(odd) { 
+            background: #efefef; 
+        }
 
         #typing {
             padding: 0.5rem 1rem;
             color: grey;
         }
-        #online-users, #private-form {
+        #online-users {
             position: fixed;
             top: 10px;
             right: 10px;
@@ -44,10 +67,28 @@
             background: rgba(255, 255, 255, 0.8);
             border-radius: 5px;
         }
+        .user-item {
+            cursor: pointer;
+        }
+        #mini-profile {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 10px;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);;
+        }
         #private-form {
-            top: 60px;
-            display: flex;
+            position: fixed;
+            bottom: 30x;
+            right: 10px;
+            display: none;
             flex-direction: column;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
         }
         #recipient, #private-input {
             margin-bottom: 5px;
@@ -61,6 +102,10 @@
     <ul id="messages"></ul>
     <div id="typing"></div>
     <div id="online-users"></div>
+    <div id="mini-profile">
+        <div id="profile-nickname"></div>
+        <button id="direct-message">DM</button>
+    </div>
     <form id="form" action="">
         <input id="input" autocomplete="off"><button>Send</button>
     </form>
@@ -80,6 +125,9 @@
         var messages = document.getElementById('messages');
         var typing = document.getElementById('typing');
         var onlineUsers = document.getElementById('online-users');
+        var miniProfile = document.getElementById('mini-profile');
+        var profileNickname = document.getElementById('profile-nickname');
+        var directMessageBtn = document.getElementById('direct-message');
         var nickname = prompt("Enter your nickname:");
 
         socket.emit('nickname', nickname);
@@ -107,7 +155,13 @@
                 socket.emit('private message', {recipientNickname: recipient.value, 
                     msg: privateInput.value});
                 privateInput.value = '';
+                privateForm.style.display = 'none';
             }
+        });
+
+        directMessageBtn.addEventListener('click', function() {
+            privateForm.style.display = 'flex';
+            miniProfile.style.display = 'none';
         });
 
         socket.on('chat message', function(msg) {
@@ -149,13 +203,21 @@
 
         socket.on('online users', function(users) {
             onlineUsers.innerHTML = 'Online Users:<br>';
-            users.forEach(user => {
-                const userItem = document.createElement('div');
-                userItem.textContent = user;
-                onlineUsers.appendChild(userItem);
-            })
+            if (users.length > 0) {
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.textContent = user;
+                    userItem.classList.add('user-item');
+                    userItem.addEventListener('click', function() {
+                        recipient.value = user;
+                        profileNickname.textContent = user;
+                        miniProfile.style.display = 'block';
+                    });
+                    onlineUsers.appendChild(userItem);
+                });
+            }
             //onlineUsers.textContent = `Online Users ${users.join(', ')}`
-        })
+        });
 
         socket.on('connect', () => {
             console.log('connected to server');
