@@ -1,11 +1,38 @@
 const express = require('express');
+const multer = require('multer');
+const mime = require('mime-types');
+const path = require('path');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+
+const io = new Server(server, {
+    maxHttpBufferSize: 1e8
+});
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 
 let onlineUsers = {};
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.post('/upload', upload.single('file'), (req, res) => {
+    if (req.file) {
+        res.json({ url: `/uploads/${req.file.filename}` });
+    } else {
+        res.status(400).send('No file uploaded');
+    }
+});
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -32,7 +59,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('file', function(fileInfo) {
-        io.emit('file', { ...fileInfo, nickname: nickname });
+        const type = mime.lookup(fileInfo.url) || 'application/octet-stream';
+        io.emit('file', { ...fileInfo, nickname: nickname, type: type });
     })
 
     socket.on('private message', ({recipientNickname, msg}) => {
@@ -58,7 +86,7 @@ io.on('connection', (socket) => {
         console.log(`${nickname} disconnected`);
         console.log('Number of connected clients:', io.engine.clientsCount);
     });
-})
+});
 
 server.listen(3000, () => {
     console.log('listening on *:3000');
