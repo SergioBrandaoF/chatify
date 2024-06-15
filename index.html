@@ -52,7 +52,10 @@
         #messages > li:nth-child(odd) { 
             background: #efefef; 
         }
-
+        #images_container {
+            max-width: 300px;
+            padding: 10px;
+        }
         #typing {
             padding: 0.5rem 1rem;
             color: grey;
@@ -69,6 +72,18 @@
         }
         .user-item {
             cursor: pointer;
+        }
+        .image-container {
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            max-width: 40vw;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         #mini-profile {
             display: none;
@@ -99,7 +114,9 @@
     </style>
 </head>
 <body>
-    <ul id="messages"></ul>
+    <ul id="messages">
+        <div id="images-container"></div>
+    </ul>
     <div id="typing"></div>
     <div id="online-users"></div>
     <div id="mini-profile">
@@ -166,9 +183,31 @@
             console.log('Received file:', fileInfo);
 
             if (fileInfo.type.startsWith('image/')) {
-                const img = document.createElement('img');
+                var item = document.createElement('li');
+                var messageDiv = document.createElement('div');
+                var nicknameSpan = document.createElement('span');
+                var imgContainer = document.createElement('div');
+                var img = document.createElement('img');
+
+                nicknameSpan.textContent = fileInfo.nickname + ': ';
+                nicknameSpan.style.fontWeight = 'bold';
+
+                
                 img.src = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
-                messages.appendChild(img);
+                img.style.maxWidth = '100%';
+
+                imgContainer.classList.add('image-container');
+                imgContainer.appendChild(img);
+
+                messageDiv.appendChild(nicknameSpan);
+                messageDiv.appendChild(document.createElement('br'))
+                messageDiv.appendChild(imgContainer);
+                item.appendChild(messageDiv);
+
+                messages.appendChild(item);
+                window.scrollTo(0, document.body.scrollHeight);
+                //document.getElementById('images-container').appendChild(imgContainer);
+                //messages.appendChild(img);
             } else {
                 const link = document.createElement('a');
                 link.href = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
