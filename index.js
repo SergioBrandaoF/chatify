@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('file', function(fileInfo) {
-        io.emit('file', fileInfo);
+        io.emit('file', { ...fileInfo, nickname: nickname });
     })
 
     socket.on('private message', ({recipientNickname, msg}) => {
