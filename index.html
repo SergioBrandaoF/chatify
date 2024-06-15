@@ -67,7 +67,7 @@
             margin: 0;
             padding: 0.5rem 1rem;
             color: green;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(194, 194, 194, 0.5);
             border-radius: 5px;
         }
         .user-item {
@@ -78,7 +78,8 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             overflow: hidden;
-            max-width: 40vw;
+            max-width: 30vw;
+            max-height: 40vw;
         }
         .image-container img {
             width: 100%;
@@ -125,6 +126,7 @@
     </div>
     <form id="form" action="" enctype="multipart/form-data">
         <input id="input" autocomplete="off"><input type="file" id="file-input">
+        <button id="send-file-button">Send File</button>
         <button>Send</button>
     </form>
     <form id="private-form" action="">
@@ -138,6 +140,7 @@
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var fileInput = document.getElementById('file-input');
+        var sendFileButton = document.getElementById('send-file-button');
         var privateForm = document.getElementById('private-form');
         var recipient = document.getElementById('recipient');
         var privateInput = document.getElementById('private-input');
@@ -161,6 +164,26 @@
                 input.value = '';
                 socket.emit('stop typing');
             }
+            /*
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        socket.emit('file', { url: data.url, nickname: nickname });
+                    }
+                })
+                .catch(error => console.error('Error uploading file:', error));
+
+                fileInput.value = '';
+            }
+            */
 
             if (file) {
                 const reader = new FileReader();
@@ -177,12 +200,13 @@
                     fileInput.value = '';
                 }
             }
+
         });
 
         socket.on('file', function(fileInfo) {
             console.log('Received file:', fileInfo);
 
-            if (fileInfo.type.startsWith('image/')) {
+            if (fileInfo.type && fileInfo.type.startsWith('image/')) {
                 var item = document.createElement('li');
                 var messageDiv = document.createElement('div');
                 var nicknameSpan = document.createElement('span');
@@ -193,7 +217,7 @@
                 nicknameSpan.style.fontWeight = 'bold';
 
                 
-                img.src = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
+                img.src = fileInfo.url;
                 img.style.maxWidth = '100%';
 
                 imgContainer.classList.add('image-container');
@@ -208,12 +232,34 @@
                 window.scrollTo(0, document.body.scrollHeight);
                 //document.getElementById('images-container').appendChild(imgContainer);
                 //messages.appendChild(img);
-            } else {
+            } else if (fileInfo.type) {
                 const link = document.createElement('a');
                 link.href = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
                 link.textContent = fileInfo.name;
                 link.download = fileInfo.name;
                 messages.appendChild(link);
+            } else {
+                console.error('Received file does not have a valid type:', fileInfo);
+            }
+        });
+
+        sendFileButton.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        socket.emit('file', { url: data.url, nickname: nickname });
+                    }
+                })
+                .catch(erro => console.error('Error uploading file:', error));
             }
         });
 
