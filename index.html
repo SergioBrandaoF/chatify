@@ -158,6 +158,8 @@
         var directMessageBtn = document.getElementById('direct-message');
         var nickname = prompt("Enter your nickname:");
 
+        var typingUsers = new Set();
+
         socket.emit('nickname', nickname);
 
         form.addEventListener('submit', function(e) {
@@ -170,26 +172,6 @@
                 input.value = '';
                 socket.emit('stop typing');
             }
-            /*
-            if (file) {
-                const formData = new FormData();
-                formData.append('file', file);
-
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.url) {
-                        socket.emit('file', { url: data.url, nickname: nickname });
-                    }
-                })
-                .catch(error => console.error('Error uploading file:', error));
-
-                fileInput.value = '';
-            }
-            */
 
             if (file) {
                 const reader = new FileReader();
@@ -236,8 +218,7 @@
 
                 messages.appendChild(item);
                 window.scrollTo(0, document.body.scrollHeight);
-                //document.getElementById('images-container').appendChild(imgContainer);
-                //messages.appendChild(img);
+                
             } else if (fileInfo.type) {
                 const link = document.createElement('a');
                 link.href = 'data:' + fileInfo.type + ';base64,' + btoa(String.fromCharCode.apply(null, fileInfo.data));
@@ -324,12 +305,28 @@
         })
 
         socket.on('typing', function(user) {
-            typing.textContent = `${user} is typing...`;
+            typingUsers.add(user);
+            updateTypingMessage();
         });
 
         socket.on('stop typing', function() {
-            typing.textContent = '';
+            typingUsers.delete(user);
+            updateTypingMessage();
         });
+
+        function updateTypingMessage() {
+            if (typingUsers.size === 0) {
+                typing.textContent = '';
+            } else if (typingUsers.size === 1) {
+                typing.textContent = `${Array.from(typingUsers)[0]} is typing...`;
+            } else if (typingUsers.size === 2) {
+                typing.textContent = `${users[0]} and ${users[1]} are typing...`;
+            } else if (typingUsers.size === 3) {
+                typing.textContent = `${users[0]}, ${users[1]}, and ${users[2]} are typing...`
+            } else {
+                typing.textContent = 'Multiple people are typeing...';
+            }
+        }
 
         socket.on('online users', function(users) {
             onlineUsers.innerHTML = '';
