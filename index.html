@@ -50,7 +50,9 @@
             padding: 0.5rem 1rem; 
         }
         #messages > li:nth-child(odd) { 
-            background: #efefef; 
+            background: #e4e4e4; 
+            max-width: 50vh;
+            border-radius: 10px;
         }
         #images_container {
             max-width: 300px;
@@ -98,13 +100,16 @@
         }
         #private-form {
             position: fixed;
-            bottom: 30x;
-            right: 10px;
+            width: 70%;
+            margin-left: 10%;
+            justify-content: center;
+            bottom: 3rem;
             display: none;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.8);
             border-radius: 5px;
             padding: 0.5rem 1rem;
+            z-index: 1000;
         }
         #recipient, #private-input {
             margin-bottom: 5px;
@@ -125,12 +130,13 @@
         <button id="direct-message">DM</button>
     </div>
     <form id="form" action="" enctype="multipart/form-data">
+        <input type="hidden" id="recipient">
         <input id="input" autocomplete="off"><input type="file" id="file-input">
         <button id="send-file-button">Send File</button>
         <button>Send</button>
     </form>
     <form id="private-form" action="">
-        <input id="recipient" autocomplete="off" placeholder="Recipient">
+        
         <input id="private-input" autocomplete="off" placeholder="Private message"><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
@@ -284,6 +290,8 @@
         directMessageBtn.addEventListener('click', function() {
             privateForm.style.display = 'flex';
             miniProfile.style.display = 'none';
+            privateForm.style.zIndex = 1000;
+            window.scrollTo(0, document.body.scrollHeight);
         });
 
         socket.on('chat message', function(msg) {
@@ -324,7 +332,9 @@
         });
 
         socket.on('online users', function(users) {
+            onlineUsers.innerHTML = '';
             onlineUsers.innerHTML = 'Online Users:<br>';
+
             if (users.length > 0) {
                 users.forEach(user => {
                     const userItem = document.createElement('div');
