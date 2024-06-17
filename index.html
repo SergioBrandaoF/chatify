@@ -320,11 +320,11 @@
             } else if (typingUsers.size === 1) {
                 typing.textContent = `${Array.from(typingUsers)[0]} is typing...`;
             } else if (typingUsers.size === 2) {
-                typing.textContent = `${users[0]} and ${users[1]} are typing...`;
+                typing.textContent = `${Array.from(typingUsers)[0]} and ${Array.from(typingUsers)[1]} are typing...`;
             } else if (typingUsers.size === 3) {
-                typing.textContent = `${users[0]}, ${users[1]}, and ${users[2]} are typing...`
+                typing.textContent = `${Array.from(typingUsers)[0]}, ${Array.from(typingUsers)[1]}, and ${Array.from(typingUsers)[2]} are typing...`
             } else {
-                typing.textContent = 'Multiple people are typeing...';
+                typing.textContent = 'Multiple people are typing...';
             }
         }
 
